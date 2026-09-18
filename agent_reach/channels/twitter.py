@@ -4,6 +4,7 @@
 import os
 import shutil
 
+from agent_reach.probe import probe_command
 from agent_reach.utils.url import host_matches
 
 from .base import Channel
@@ -81,11 +82,13 @@ class TwitterChannel(Channel):
         )
 
     def _check_twitter_cli(self, config=None):
-        """Inspect explicit credentials without starting twitter-cli.
+        """Probe twitter-cli with saved credentials in the child environment.
 
-        Upstream ``twitter status`` automatically reads browser cookies when
-        credentials are missing *or invalid*. Doctor cannot disable that
-        fallback, so executing it would violate the Cookie-Editor-only policy.
+        Upstream ``twitter status`` reads browser cookies when credentials are
+        missing. Doctor therefore runs the probe only when both
+        ``TWITTER_AUTH_TOKEN`` and ``TWITTER_CT0`` are already present in the
+        process environment or in Config, and injects the missing values into
+        the child env without mutating ``os.environ``.
         """
         if not shutil.which("twitter"):
             return None
@@ -95,17 +98,44 @@ class TwitterChannel(Channel):
             "TWITTER_AUTH_TOKEN"
         )
         ct0 = os.environ.get("TWITTER_CT0") or child_env.get("TWITTER_CT0")
-        if auth_token and ct0:
+        if not (auth_token and ct0):
             return "warn", (
-                "twitter-cli 已安装，且 Cookie-Editor 凭据已配置；"
-                "Doctor 不会执行 `twitter status`，因为上游在验证失败时会"
-                "自动读取浏览器 Cookie。请在你明确同意时手动验证。"
+                "twitter-cli 已安装但没有完整的显式凭据。请用 Cookie-Editor "
+                "从 x.com 导出后运行：\n"
+                "  agent-reach configure twitter-cookies\n"
+                "Doctor 不会自动读取浏览器 Cookie。"
+            )
+
+        probe = probe_command(
+            "twitter",
+            ["status"],
+            timeout=15,
+            retries=1,
+            package="twitter-cli",
+            env=child_env,
+        )
+        if probe.status == "missing":
+            return None
+        if probe.status == "broken":
+            return "error", "twitter-cli 命令存在但无法执行。\n" + probe.hint
+        if probe.status == "timeout":
+            return "error", "twitter-cli 健康检查超时（已重试 1 次）。\n" + probe.hint
+
+        output = probe.output
+        if "ok: true" in output:
+            return "ok", (
+                "twitter-cli 完整可用（搜索、读推文、时间线、长文/Article、"
+                "用户查询、Thread）"
+            )
+        if "not_authenticated" in output:
+            return "warn", (
+                "twitter-cli 已安装但未认证。凭据可能已过期，请用 Cookie-Editor "
+                "从 x.com 重新导出后运行：\n"
+                "  agent-reach configure twitter-cookies"
             )
         return "warn", (
-            "twitter-cli 已安装但没有完整的显式凭据。请用 Cookie-Editor "
-            "从 x.com 导出后运行：\n"
-            "  agent-reach configure twitter-cookies\n"
-            "Doctor 不会自动读取浏览器 Cookie。"
+            "twitter-cli 已安装但认证检查失败。运行：\n"
+            "  twitter -v status 查看详细信息"
         )
 
     def _check_opencli(self):

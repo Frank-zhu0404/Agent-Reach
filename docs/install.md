@@ -160,9 +160,10 @@ Some channels need credentials only the user can provide. Based on the doctor ou
 agent-reach configure twitter-cookies
 ```
 
-这会把 `twitter_auth_token` 和 `twitter_ct0` 保存给 Agent Reach 自己的
-`doctor` 配置检查。`doctor` 不会实时执行上游 `twitter status`，也不会修改
-当前 Shell。直接运行 `twitter search/read/...` 前，必须在该进程环境中显式设置：
+这会把 `twitter_auth_token` 和 `twitter_ct0` 保存到配置文件。`doctor` 和
+`configure` 的验证会把缺失的 `TWITTER_AUTH_TOKEN` / `TWITTER_CT0` 注入
+`twitter status` 子进程，不会修改当前 Shell。直接运行 `twitter search/read/...`
+前，必须在该进程环境中显式设置：
 
 ```bash
 export TWITTER_AUTH_TOKEN="..."
@@ -399,7 +400,7 @@ If the user wants a different agent to handle it, let them choose.
 | `agent-reach doctor` | Show channel status |
 | `agent-reach watch` | Quick health + update check (for scheduled tasks) |
 | `agent-reach check-update` | Check for new versions |
-| `agent-reach configure twitter-cookies` | 通过隐藏输入保存 Twitter Cookie；直接调用仍需显式环境变量 |
+| `agent-reach configure twitter-cookies` | 通过隐藏输入保存 Twitter Cookie，验证时注入子进程；直接调用仍需显式环境变量 |
 | `agent-reach configure proxy` | 通过隐藏输入保存代理地址；不是自动解锁开关 |
 | `agent-reach configure groq-key` | 通过隐藏输入配置小宇宙转录 Key |
 

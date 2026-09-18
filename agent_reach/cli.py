@@ -1542,19 +1542,40 @@ def _cmd_configure(args):
                 if all(success for _, success in legacy_results):
                     print("  Legacy copies written successfully.")
 
-            print(
-                "  凭据未实时验证：不会执行 `twitter status`，因为上游在"
-                "验证失败时会自动读取浏览器 Cookie。"
-            )
-            if not shutil.which("twitter"):
-                print(
-                    "  [!] twitter-cli 未安装。运行：pipx install twitter-cli"
-                )
-            else:
-                print(
-                    "  注意：独立 `twitter` 命令不会读取 Agent Reach 配置；"
-                    "直接使用时需显式设置 TWITTER_AUTH_TOKEN/TWITTER_CT0。"
-                )
+            print("Testing Twitter access...", end=" ")
+            try:
+                import subprocess
+
+                from agent_reach.channels.twitter import twitter_cli_child_env
+                from agent_reach.utils.process import utf8_subprocess_env
+
+                twitter_bin = shutil.which("twitter")
+                if not twitter_bin:
+                    print(
+                        "[!] twitter-cli not installed. Run: pipx install twitter-cli"
+                    )
+                else:
+                    env = utf8_subprocess_env()
+                    env.update(twitter_cli_child_env(config))
+                    result = subprocess.run(
+                        [twitter_bin, "status"],
+                        capture_output=True,
+                        encoding="utf-8",
+                        errors="replace",
+                        timeout=15,
+                        env=env,
+                    )
+                    output = (result.stdout or "") + (result.stderr or "")
+                    if "ok: true" in output:
+                        print("✅ Twitter access works!")
+                    else:
+                        print("[!] Auth check failed (cookies might be wrong)")
+                    print(
+                        "  注意：独立 `twitter` 命令不会读取 Agent Reach 配置；"
+                        "直接使用时需显式设置 TWITTER_AUTH_TOKEN/TWITTER_CT0。"
+                    )
+            except Exception as e:
+                print(f"[X] Failed: {e}")
         else:
             print("[X] Could not find auth_token and ct0 in your input.")
             print("   Run `agent-reach configure twitter-cookies` and paste either:")
