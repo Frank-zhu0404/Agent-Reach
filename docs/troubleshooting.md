@@ -60,9 +60,8 @@ agent-reach doctor    # boss 行 message 应显示「浏览器内有登录 cooki
 
 **原因：** twitter-cli 需要 `TWITTER_AUTH_TOKEN` 和 `TWITTER_CT0`
 环境变量才能访问 Twitter API。`agent-reach configure twitter-cookies`
-保存的值会在 `doctor` / `configure` 验证时注入 `twitter status` 子进程，
-但不会设置当前 Shell。直接运行 `twitter` 时仍需显式导出这两个变量。
-如果你的网络环境需要代理才能访问 x.com，还需要配置代理。
+保存的值只供 doctor 检查配置是否齐全；doctor 不执行上游认证，也不会设置当前
+Shell。如果你的网络环境需要代理才能访问 x.com，还需要配置代理。
 
 **解决方案：**
 

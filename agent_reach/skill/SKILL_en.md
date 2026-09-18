@@ -83,10 +83,10 @@ bili search "query" --type video -n 5
 ## Login-backed platforms (pick by doctor's active_backend)
 
 Twitter boundary: cookies saved by `agent-reach configure twitter-cookies`
-are injected by `doctor` / `configure` into the `twitter status` child
-process as `TWITTER_AUTH_TOKEN` and `TWITTER_CT0`. They do not configure the
-current shell. Before calling `twitter` directly, explicitly provide those
-variables in the child-process environment without logging their values.
+are used only by `doctor` to check whether explicit credentials are present.
+`doctor` does not run `twitter status` or configure the current shell. Before
+calling `twitter` directly, explicitly provide `TWITTER_AUTH_TOKEN` and
+`TWITTER_CT0` in the child-process environment without logging their values.
 
 XiaoHongShu boundary: Agent Reach must not log the user in or read browser
 cookies. OpenCLI may use only an existing Chrome session explicitly controlled

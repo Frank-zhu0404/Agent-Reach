@@ -26,11 +26,10 @@ Both commands use a hidden prompt. For non-interactive automation, send the
 same exported value through stdin and add `--stdin`; never place cookies in
 the process arguments.
 
-Twitter values saved by Agent Reach are injected by `agent-reach doctor`
-and `configure` into the `twitter status` child process as
-`TWITTER_AUTH_TOKEN` / `TWITTER_CT0`. They are not exported into the
-current shell. Direct `twitter` commands still require those variables
-in their process environment.
+Twitter values saved by Agent Reach are used by `agent-reach doctor` only to
+check whether explicit credentials are present. Doctor does not run
+`twitter status`. Direct `twitter` commands still require
+`TWITTER_AUTH_TOKEN` and `TWITTER_CT0` in their process environment.
 
 This XiaoHongShu export is for xiaohongshu-mcp or a legacy tool.
 `agent-reach configure xhs-cookies` does not inject cookies into OpenCLI or

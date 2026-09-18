@@ -160,10 +160,9 @@ Some channels need credentials only the user can provide. Based on the doctor ou
 agent-reach configure twitter-cookies
 ```
 
-这会把 `twitter_auth_token` 和 `twitter_ct0` 保存到配置文件。`doctor` 和
-`configure` 的验证会把缺失的 `TWITTER_AUTH_TOKEN` / `TWITTER_CT0` 注入
-`twitter status` 子进程，不会修改当前 Shell。直接运行 `twitter search/read/...`
-前，必须在该进程环境中显式设置：
+这会把 `twitter_auth_token` 和 `twitter_ct0` 保存给 Agent Reach 自己的
+`doctor` 配置检查。`doctor` 不会实时执行上游 `twitter status`，也不会修改
+当前 Shell。直接运行 `twitter search/read/...` 前，必须在该进程环境中显式设置：
 
 ```bash
 export TWITTER_AUTH_TOKEN="..."

@@ -540,25 +540,22 @@ def test_legacy_twitter_sync_reports_only_confirmed_results(
     assert output.count("  failed:") == failed_count
 
 
-def test_twitter_configure_verify_injects_saved_credentials_into_child_env(
+def test_twitter_configure_never_runs_upstream_browser_fallback(
     monkeypatch, capsys
 ):
-    import os
     import shutil
 
     import agent_reach.config as config_module
 
-    monkeypatch.delenv("TWITTER_AUTH_TOKEN", raising=False)
-    monkeypatch.delenv("TWITTER_CT0", raising=False)
     monkeypatch.setattr(config_module, "Config", _MemoryConfig)
     monkeypatch.setattr(shutil, "which", lambda _name: "/usr/bin/twitter")
-    calls = []
-
-    def fake_run(cmd, **kwargs):
-        calls.append((cmd, kwargs))
-        return subprocess.CompletedProcess(cmd, 0, "ok: true\n", "")
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *_args, **_kwargs: pytest.fail(
+            "configure must not execute twitter status"
+        ),
+    )
 
     cli._cmd_configure(
         Namespace(
@@ -569,16 +566,10 @@ def test_twitter_configure_verify_injects_saved_credentials_into_child_env(
         )
     )
 
-    child_env = calls[0][1]["env"]
     output = capsys.readouterr().out
-    assert calls[0][0] == ["/usr/bin/twitter", "status"]
-    assert child_env["TWITTER_AUTH_TOKEN"] == "auth-value"
-    assert child_env["TWITTER_CT0"] == "ct0-value"
-    assert "TWITTER_AUTH_TOKEN" not in os.environ
-    assert "TWITTER_CT0" not in os.environ
     assert "已保存" in output
-    assert "Twitter access works" in output
-    assert "未实时验证" not in output
+    assert "未实时验证" in output
+    assert "Twitter access works" not in output
 
 
 def test_doctor_never_installs_or_updates_skill(monkeypatch, capsys):

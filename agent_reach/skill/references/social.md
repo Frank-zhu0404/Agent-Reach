@@ -80,10 +80,10 @@ xhs feed                    # 推荐
 
 ### 认证前置条件
 
-`agent-reach configure twitter-cookies` 通过隐藏输入保存的 Cookie 会由
-`agent-reach doctor` / `configure` 注入 `twitter status` 子进程的
-`TWITTER_AUTH_TOKEN` / `TWITTER_CT0`，不会设置当前 Shell。运行下面任何
-`twitter` 命令前，必须在同一个 Shell 或子进程环境中显式提供：
+`agent-reach configure twitter-cookies` 通过隐藏输入保存的 Cookie 只供
+`agent-reach doctor` 检查显式凭据是否齐全。`doctor` 不执行上游
+`twitter status`，也不会设置当前 Shell。运行下面任何 `twitter` 命令前，
+必须在同一个 Shell 或子进程环境中显式提供：
 
 ```bash
 export TWITTER_AUTH_TOKEN="..."
